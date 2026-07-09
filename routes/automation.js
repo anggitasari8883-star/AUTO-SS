@@ -6,38 +6,26 @@ const fs = require('fs');
 let automationBot = null;
 let isRunning = false;
 
-// POST: Start automation
 router.post('/start', async (req, res) => {
   try {
     if (isRunning) {
       return res.status(400).json({ error: 'Automation already running' });
     }
-
     const { playerIds } = req.body;
-
     if (!playerIds || !Array.isArray(playerIds) || playerIds.length === 0) {
       return res.status(400).json({ error: 'Invalid playerIds' });
     }
-
     isRunning = true;
-
-    // Initialize bot
     automationBot = new AutomationBot();
     await automationBot.init();
     await automationBot.setSessionCookie();
-
-    // Process batch
     const results = await automationBot.processBatch(playerIds, (progress) => {
-      console.log(`Progress: ${progress.current}/${progress.total} (Completed: ${progress.completed})`);
+      console.log(`Progress: ${progress.current}/${progress.total}`);
     });
-
     await automationBot.close();
     isRunning = false;
-
-    // Save results to file
     const resultsFile = `results-${Date.now()}.json`;
     fs.writeFileSync(resultsFile, JSON.stringify(results, null, 2));
-
     res.json({
       success: true,
       totalProcessed: playerIds.length,
@@ -53,12 +41,10 @@ router.post('/start', async (req, res) => {
   }
 });
 
-// GET: Check status
 router.get('/status', (req, res) => {
   res.json({ isRunning });
 });
 
-// POST: Stop automation
 router.post('/stop', async (req, res) => {
   try {
     if (automationBot) {
@@ -72,16 +58,13 @@ router.post('/stop', async (req, res) => {
   }
 });
 
-// GET: Get results file
 router.get('/results/:filename', (req, res) => {
   try {
     const filename = req.params.filename;
     const filepath = `${filename}`;
-    
     if (!fs.existsSync(filepath)) {
       return res.status(404).json({ error: 'File not found' });
     }
-
     const data = fs.readFileSync(filepath, 'utf8');
     res.json(JSON.parse(data));
   } catch (error) {
