@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 
 function App() {
   const [serverStatus, setServerStatus] = useState(false);
+  const [serverUrl, setServerUrl] = useState('');
 
   useEffect(() => {
     checkServer();
@@ -12,7 +13,15 @@ function App() {
 
   const checkServer = async () => {
     try {
-      const response = await axios.get('/api/health');
+      // Detect server URL automatically
+      const protocol = window.location.protocol;
+      const hostname = window.location.hostname;
+      const port = window.location.port ? `:${window.location.port}` : '';
+      const baseUrl = `${protocol}//${hostname}${port}`;
+      
+      setServerUrl(baseUrl);
+
+      const response = await axios.get(`${baseUrl}/api/health`);
       setServerStatus(response.status === 200);
     } catch (error) {
       setServerStatus(false);
@@ -23,9 +32,9 @@ function App() {
     <div className="app">
       <div className="status-bar">
         <span className={`status-indicator ${serverStatus ? 'online' : 'offline'}`}></span>
-        <span>{serverStatus ? 'Server Connected' : 'Server Disconnected'}</span>
+        <span>{serverStatus ? '✅ Server Connected' : '❌ Server Disconnected'}</span>
       </div>
-      <Dashboard />
+      <Dashboard serverUrl={serverUrl} />
     </div>
   );
 }

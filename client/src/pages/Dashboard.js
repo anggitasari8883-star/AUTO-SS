@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import './Dashboard.css';
 
-function Dashboard() {
+function Dashboard({ serverUrl }) {
   const [playerIds, setPlayerIds] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(null);
@@ -44,7 +44,7 @@ function Dashboard() {
     try {
       setIsRunning(true);
       setProgress({ current: 0, total: playerIds.length });
-      const response = await axios.post('/api/automation/start', {
+      const response = await axios.post(`${serverUrl}/api/automation/start`, {
         playerIds: playerIds,
       });
       setResults(response.data.results);
@@ -63,7 +63,7 @@ function Dashboard() {
 
   const handleStopAutomation = async () => {
     try {
-      await axios.post('/api/automation/stop');
+      await axios.post(`${serverUrl}/api/automation/stop`);
       setIsRunning(false);
     } catch (error) {
       console.error('Error stopping automation:', error);
@@ -90,8 +90,11 @@ function Dashboard() {
     <div className="dashboard-container">
       <div className="dashboard-card">
         <h1>🤖 Auto Screenshot Dashboard</h1>
+        <p className="subtitle">Automation History Bank untuk 500 Player</p>
+
         <div className="section">
           <h2>📝 Input Player IDs</h2>
+
           <div className="input-group">
             <input
               type="text"
@@ -105,7 +108,9 @@ function Dashboard() {
               Tambah
             </button>
           </div>
+
           <div className="or-divider">atau</div>
+
           <div className="file-upload">
             <input
               type="file"
@@ -118,6 +123,7 @@ function Dashboard() {
               📤 Upload File (.txt / .csv)
             </button>
           </div>
+
           {playerIds.length > 0 && (
             <div className="ids-list">
               <h3>Player IDs ({playerIds.length})</h3>
@@ -134,6 +140,7 @@ function Dashboard() {
             </div>
           )}
         </div>
+
         <div className="section">
           <h2>⚙️ Control</h2>
           <div className="button-group">
@@ -151,6 +158,7 @@ function Dashboard() {
             )}
           </div>
         </div>
+
         {progress && (
           <div className="section">
             <h2>📊 Progress</h2>
@@ -177,9 +185,11 @@ function Dashboard() {
             </div>
           </div>
         )}
+
         {results.length > 0 && (
           <div className="section">
             <h2>✅ Results ({results.length})</h2>
+
             <div className="results-actions">
               <button onClick={handleCopyAllLinks} className="btn btn-success">
                 📋 Copy All Links
@@ -188,6 +198,7 @@ function Dashboard() {
                 💾 Download JSON
               </button>
             </div>
+
             <div className="results-table">
               <table>
                 <thead>
@@ -199,7 +210,7 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((result, index) => (
+                  {results.slice(0, 20).map((result, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
                       <td>{result.playerId}</td>
@@ -212,7 +223,7 @@ function Dashboard() {
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(result.imageUrl);
-                            alert('Link copied!');
+                            alert('✅ Link copied!');
                           }}
                           className="btn btn-small"
                         >
@@ -223,6 +234,9 @@ function Dashboard() {
                   ))}
                 </tbody>
               </table>
+              {results.length > 20 && (
+                <p className="show-more">... dan {results.length - 20} hasil lainnya</p>
+              )}
             </div>
           </div>
         )}
